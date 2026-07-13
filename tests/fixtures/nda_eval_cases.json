@@ -1,0 +1,79 @@
+﻿[
+  {
+    "id": "HIGH-001",
+    "title": "Unlimited liability",
+    "text": "The Receiving Party shall be subject to unlimited liability for any damages arising from breach of this Agreement.",
+    "expected_risk": "high",
+    "expected_rules": ["Unlimited Liability"]
+  },
+  {
+    "id": "HIGH-002",
+    "title": "Indefinite confidentiality term",
+    "text": "The confidentiality obligations under this Agreement shall continue indefinitely and without any time limit.",
+    "expected_risk": "high",
+    "expected_rules": ["Missing Duration"]
+  },
+  {
+    "id": "HIGH-003",
+    "title": "Automatic IP assignment",
+    "text": "The Receiving Party hereby automatically assigns, transfers, and conveys to the Disclosing Party all right, title, and interest in any intellectual property and derivative products developed during the evaluation.",
+    "expected_risk": "high",
+    "expected_rules": ["IP Assignment"]
+  },
+  {
+    "id": "HIGH-004",
+    "title": "One-sided zero liability cap and liquidated damages",
+    "text": "The Disclosing Party's aggregate liability is strictly capped at $0.00, while the Receiving Party agrees to indemnify, defend, and hold harmless the Disclosing Party and is subject to liquidated damages of minimum $5,000,000.",
+    "expected_risk": "high",
+    "expected_rules": ["Unilateral Indemnity", "Zero Liability Cap", "Punitive Liquidated Damages"]
+  },
+  {
+    "id": "HIGH-005",
+    "title": "Broad non-compete restriction",
+    "text": "The Receiving Party is prohibited from engaging, directly or indirectly, in competitive business operations for five years after termination.",
+    "expected_risk": "high",
+    "expected_rules": ["Non-Compete Restriction"]
+  },
+  {
+    "id": "MED-001",
+    "title": "Exclusive jurisdiction",
+    "text": "Each party agrees that disputes shall be subject to the exclusive jurisdiction of the courts located in New York.",
+    "expected_risk": "medium",
+    "expected_rules": ["Exclusive Jurisdiction"]
+  },
+  {
+    "id": "MED-002",
+    "title": "Broad confidentiality scope",
+    "text": "Confidential Information includes all technical and business information disclosed by the Disclosing Party.",
+    "expected_risk": "medium",
+    "expected_rules": ["Broad Confidentiality Scope"]
+  },
+  {
+    "id": "MED-003",
+    "title": "Unilateral obligations",
+    "text": "Only the Receiving Party shall maintain confidentiality and protect all disclosed information under this Agreement.",
+    "expected_risk": "medium",
+    "expected_rules": ["Unilateral Obligations"]
+  },
+  {
+    "id": "LOW-001",
+    "title": "Standard confidentiality duty",
+    "text": "The Receiving Party shall use reasonable care to protect Confidential Information and may use it only for the permitted purpose.",
+    "expected_risk": "no-risk",
+    "expected_rules": []
+  },
+  {
+    "id": "LOW-002",
+    "title": "Return or destruction clause",
+    "text": "Upon written request, the Receiving Party shall promptly return or destroy Confidential Information in its possession.",
+    "expected_risk": "no-risk",
+    "expected_rules": []
+  },
+  {
+    "id": "LOW-003",
+    "title": "Limited exclusions",
+    "text": "Confidential Information does not include information that is publicly available or independently developed without use of the disclosed information.",
+    "expected_risk": "no-risk",
+    "expected_rules": []
+  }
+]

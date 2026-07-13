@@ -63,7 +63,69 @@ RISK_CATEGORIES = {
             "Request reciprocal confidentiality duties",
             "Balance rights and obligations"
         ]
+    },
+    "IP Assignment": {
+        "keywords": ["assigns", "intellectual property", "derivative products"],
+        "severity": "critical",
+        "recommendations": [
+            "Remove automatic assignment of pre-existing and independently developed IP",
+            "Limit any ownership transfer to agreed deliverables created specifically for the disclosing party"
+        ]
+    },
+    "Unilateral Indemnity": {
+        "keywords": ["indemnify", "defend", "hold harmless"],
+        "severity": "critical",
+        "recommendations": [
+            "Make indemnity obligations mutual and limited to third-party claims caused by the indemnifying party",
+            "Add prompt notice, control-of-defense, and settlement-consent requirements"
+        ]
+    },
+    "Zero Liability Cap": {
+        "keywords": ["capped at $0", "liability cap"],
+        "severity": "critical",
+        "recommendations": [
+            "Replace the zero cap with a balanced, reciprocal liability cap",
+            "Apply the same limitations and exclusions to both parties"
+        ]
+    },
+    "Punitive Liquidated Damages": {
+        "keywords": ["liquidated damages", "minimum damages"],
+        "severity": "critical",
+        "recommendations": [
+            "Remove predetermined penalties that are disproportionate to likely loss",
+            "Limit recovery to proven direct damages and a mutually agreed reasonable cap"
+        ]
+    },
+    "Non-Compete Restriction": {
+        "keywords": ["non-compete", "competitive business"],
+        "severity": "critical",
+        "recommendations": [
+            "Remove the non-compete from the NDA; confidentiality obligations should protect disclosure without restricting competition",
+            "If a restriction is necessary, narrowly define its duration, geography, products, and customer scope"
+        ]
+    },
+    "Unmarked Confidential Information": {
+        "keywords": ["marked or unmarked"],
+        "severity": "high",
+        "recommendations": [
+            "Require confidential information to be identified in writing or confirmed promptly after oral disclosure",
+            "Add objective criteria and exclusions so the receiving party can identify protected information"
+        ]
     }
+}
+
+RULE_CATEGORY_MAP = {
+    "Broad Confidentiality Scope": "Scope Overly Broad",
+    "Missing Duration": "Duration + Liability",
+    "Unlimited Liability": "Unlimited Liability",
+    "Exclusive Jurisdiction": "Exclusive Jurisdiction",
+    "Unilateral Obligations": "Unilateral Obligations",
+    "IP Assignment": "IP Assignment",
+    "Unilateral Indemnity": "Unilateral Indemnity",
+    "Zero Liability Cap": "Zero Liability Cap",
+    "Punitive Liquidated Damages": "Punitive Liquidated Damages",
+    "Non-Compete Restriction": "Non-Compete Restriction",
+    "Unmarked Confidential Information": "Unmarked Confidential Information",
 }
 
 
@@ -84,20 +146,10 @@ def categorize_risk(matched_rules, clause_text):
     if "Missing Duration" in matched_rules and any(kw in clause_lower for kw in ["liability", "damages"]):
         return "Duration + Liability"
     
-    # Check individual categories
-    for category, rules in RISK_CATEGORIES.items():
-        for rule in matched_rules:
-            if rule in ["Broad Confidentiality Scope", "Missing Duration", "Unlimited Liability", "Exclusive Jurisdiction", "Unilateral Obligations"]:
-                if "Broad Confidentiality" in rule:
-                    return "Scope Overly Broad"
-                elif "Missing Duration" in rule:
-                    return "Duration + Liability" if "liability" in clause_lower else "Duration + Liability"
-                elif "Unlimited Liability" in rule:
-                    return "Unlimited Liability"
-                elif "Exclusive Jurisdiction" in rule:
-                    return "Exclusive Jurisdiction"
-                elif "Unilateral" in rule:
-                    return "Unilateral Obligations"
+    for rule in matched_rules:
+        category = RULE_CATEGORY_MAP.get(rule)
+        if category:
+            return category
     
     return None
 

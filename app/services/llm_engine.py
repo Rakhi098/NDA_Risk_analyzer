@@ -40,7 +40,8 @@ def analyze_clause(clause):
 CRITICAL RULE: DO NOT HALLUCINATE. If the clause doesn't mention a risk, DO NOT REPORT IT.
 
 RISK TYPES (only report if explicitly in text):
-- HIGH: unlimited liability, indefinite term, overly broad scope, exclusive jurisdiction
+- HIGH: unlimited or one-sided liability, indefinite term, overly broad scope, exclusive jurisdiction,
+  automatic IP assignment, unilateral indemnity, punitive liquidated damages, or a non-compete restriction
 - MEDIUM: concerning terms but potentially negotiable
 - NO-RISK: standard, normal, balanced
 

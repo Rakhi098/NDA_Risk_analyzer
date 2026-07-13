@@ -24,6 +24,11 @@ class Config:
     LLM_MODEL = os.getenv("LLM_MODEL", "gemma:2b")
     LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", 0))
     LLM_BASE_URL = os.getenv("LLM_BASE_URL", "http://localhost:11434")
+
+    # Local OCR Configuration
+    TESSERACT_CMD = os.getenv("TESSERACT_CMD", "")
+    OCR_LANGUAGE = os.getenv("OCR_LANGUAGE", "eng")
+    OCR_DPI = int(os.getenv("OCR_DPI", 300))
     
     # Clause Processing
     MAX_CLAUSES = int(os.getenv("MAX_CLAUSES", 20))

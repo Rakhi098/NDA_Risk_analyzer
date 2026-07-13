@@ -1,3 +1,5 @@
+import re
+
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -62,6 +64,57 @@ RULES = {
         "negative_patterns": [],
         "name": "Unilateral Obligations",
         "severity": "medium"
+    },
+    "ip_assignment": {
+        "patterns": [
+            "hereby automatically assigns",
+            "assigns, transfers, and conveys",
+            "all right, title, and interest in any intellectual property",
+            "ownership of all derivative works shall vest"
+        ],
+        "negative_patterns": [],
+        "name": "IP Assignment",
+        "severity": "high"
+    },
+    "unilateral_indemnity": {
+        "patterns": [
+            "receiving party agrees to indemnify",
+            "receiving party shall indemnify",
+            "receiving party agrees to indemnify, defend, and hold harmless"
+        ],
+        "negative_patterns": ["each party shall indemnify", "both parties shall indemnify", "mutual indemnification"],
+        "name": "Unilateral Indemnity",
+        "severity": "high"
+    },
+    "zero_liability_cap": {
+        "patterns": ["liability shall be strictly capped at $0", "liability is capped at $0"],
+        "regex_patterns": [r"(?:aggregate\s+)?liability.{0,100}(?:capped|limited).{0,30}(?:\$\s*0(?:\.0+)?|zero)"],
+        "negative_patterns": [],
+        "name": "Zero Liability Cap",
+        "severity": "high"
+    },
+    "punitive_liquidated_damages": {
+        "patterns": ["liquidated damages of minimum", "liquidated damages of at least", "minimum liquidated damages"],
+        "negative_patterns": [],
+        "name": "Punitive Liquidated Damages",
+        "severity": "high"
+    },
+    "non_compete_restriction": {
+        "patterns": [
+            "non-compete",
+            "prohibited from engaging, directly or indirectly",
+            "competitive business operations",
+            "competitive business activities"
+        ],
+        "negative_patterns": [],
+        "name": "Non-Compete Restriction",
+        "severity": "high"
+    },
+    "unmarked_confidential_information": {
+        "patterns": ["marked or unmarked", "whether or not marked confidential"],
+        "negative_patterns": [],
+        "name": "Unmarked Confidential Information",
+        "severity": "medium"
     }
 }
 
@@ -82,17 +135,19 @@ def validate_clause(clause):
     matched_rules = []
     
     for rule_id, rule in RULES.items():
-        # Check if any positive pattern matches
-        pattern_matched = False
-        for pattern in rule["patterns"]:
-            if pattern in clause_lower:
-                pattern_matched = True
-                break
+        # Check literal and regex patterns. Regex supports small variations
+        # such as "$0" versus "$0.00" in an asymmetric liability cap.
+        pattern_matched = any(pattern in clause_lower for pattern in rule["patterns"])
+        if not pattern_matched:
+            pattern_matched = any(
+                re.search(pattern, clause_lower, flags=re.DOTALL)
+                for pattern in rule.get("regex_patterns", [])
+            )
         
         if not pattern_matched:
             continue
         
-        # If pattern matched, check for negative patterns that would negate the match
+        # If pattern matched, check for negative patterns that would negate the match (precision mechanism)
         negated = False
         if "negative_patterns" in rule:
             for neg_pattern in rule["negative_patterns"]:

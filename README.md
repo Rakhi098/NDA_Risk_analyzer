@@ -1,10 +1,10 @@
 # NDA Risk Analyzer
 
-A production-style AI-Assisted NDA Risk Analyzer using FastAPI, local lightweight LLMs via Ollama, PyMuPDF, and hybrid AI + validation-rule architecture.
+A production-style NDA Risk Analyzer using FastAPI, local OCR, PyMuPDF, local lightweight LLMs via Ollama, and validation rules.
 
 ## Features
 
-- 📄 **PDF Upload & Extraction**: Upload NDA PDFs and automatically extract text using PyMuPDF
+- 📄 **Local Document Extraction**: Upload PDF, DOCX, TXT, MD, or CSV files. Scanned pages embedded in PDFs are read with local Tesseract OCR; no AI model is used to extract document text.
 - 🤖 **AI-Assisted Analysis**: Leverages Gemma 2B model via Ollama for intelligent clause analysis
 - ✅ **Deterministic Validation**: Rule-based validation layer supports and enhances AI analysis
 - 📊 **Risk Scoring**: Comprehensive risk assessment with confidence metrics
@@ -16,11 +16,11 @@ A production-style AI-Assisted NDA Risk Analyzer using FastAPI, local lightweigh
 ## Architecture
 
 ```
-PDF Upload
+PDF, Word, or text upload
     ↓
 FastAPI Endpoint
     ↓
-PyMuPDF Text Extraction
+Direct text extraction / local Tesseract OCR
     ↓
 Clause Segmentation
     ↓
@@ -38,7 +38,7 @@ Structured Risk Report
 | Component     | Technology          |
 |---------------|-------------------|
 | Backend API   | FastAPI           |
-| PDF Parsing   | PyMuPDF (fitz)    |
+| Document Parsing | PyMuPDF + Tesseract OCR |
 | AI Model      | Gemma 2B via Ollama|
 | LLM Framework | LangChain Ollama  |
 | Language      | Python 3.8+       |
@@ -51,6 +51,7 @@ Structured Risk Report
 ### Required
 - Python 3.8+
 - Ollama (for local LLM inference)
+- Tesseract OCR (for scanned PDF pages)
 - pip/conda for package management
 
 ### System Requirements
@@ -102,6 +103,12 @@ Update `.env` file with your settings:
 LLM_MODEL=gemma:2b
 LLM_BASE_URL=http://localhost:11434
 
+# OCR Configuration
+# Set this on Windows only if tesseract.exe is not on PATH.
+TESSERACT_CMD=C:\\Program Files\\Tesseract-OCR\\tesseract.exe
+OCR_LANGUAGE=eng
+OCR_DPI=300
+
 # API Configuration  
 API_HOST=0.0.0.0
 API_PORT=8000
@@ -148,7 +155,7 @@ Response:
 POST /upload
 Content-Type: multipart/form-data
 
-File: nda_document.pdf
+File: nda_document.pdf, nda_document.docx, or nda_document.txt
 ```
 
 Response:
@@ -175,7 +182,7 @@ NDA_Solution/
 │   ├── api/
 │   │   └── upload.py              # Upload endpoint
 │   ├── services/
-│   │   ├── parser.py              # PDF text extraction
+│   │   ├── parser.py              # Local PDF, DOCX, and text extraction/OCR
 │   │   ├── clause_splitter.py     # Clause segmentation
 │   │   ├── llm_engine.py          # AI analysis via Ollama
 │   │   ├── rule_engine.py         # Validation rules

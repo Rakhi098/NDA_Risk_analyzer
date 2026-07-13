@@ -1,13 +1,12 @@
-import streamlit as st
+﻿import streamlit as st
 import requests
 import json
 import time
-from datetime import datetime
 
 # Page configuration
 st.set_page_config(
     page_title="NDA Risk Analyzer Pro",
-    page_icon="📋",
+    page_icon="NDA",
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
@@ -58,12 +57,12 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # Header
-st.title("📋 NDA Risk Analyzer Pro")
+st.title("NDA Risk Analyzer Pro")
 st.markdown("**AI-Powered Professional NDA Risk Analysis** | Gemma 2B via Ollama | 100% Offline")
 
 # Sidebar
 with st.sidebar:
-    st.header("⚙️ Configuration")
+    st.header("Configuration")
     
     api_url = st.text_input(
         "API URL",
@@ -73,7 +72,7 @@ with st.sidebar:
     
     st.divider()
     
-    st.header("📌 Quick Start")
+    st.header("Quick Start")
     with st.expander("Setup Instructions"):
         st.markdown("""
         **Prerequisites:**
@@ -97,48 +96,46 @@ with st.sidebar:
     
     st.divider()
     
-    st.header("ℹ️ About")
+    st.header("About")
     st.markdown("""
     **Features:**
-    - 🤖 AI analysis with Gemma 2B
-    - ✅ Rule-based validation
-    - 🔒 Fully offline processing
-    - 📊 Risk scoring (0-100)
-    - 💡 Mitigation recommendations
-    - 📄 Comprehensive reporting
+    - AI analysis with Gemma 2B
+    - Rule-based validation
+    - Fully offline processing
+    - Risk scoring (0-100)
+    - Mitigation recommendations
+    - Comprehensive reporting
     """)
 
 # Main content
-st.markdown("Upload your NDA document for comprehensive risk analysis and recommendations.")
+st.markdown("Upload an NDA as a PDF, Word, or text file for comprehensive risk analysis and recommendations. Scanned pages inside PDFs are read locally with OCR.")
 
 # File uploader
 col1, col2 = st.columns([3, 1])
 with col1:
     uploaded_file = st.file_uploader(
-        "Choose PDF file",
-        type="pdf",
-        help="Upload your NDA document for analysis"
+        "Choose NDA document",
+        type=["pdf", "docx", "txt", "md", "csv"],
+        help="Text and DOCX files are read directly; scanned PDF pages use local Tesseract OCR."
     )
 
 if uploaded_file is not None:
     # Display file info
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3 = st.columns(3)
     with col1:
-        st.info(f"📄 **File:** {uploaded_file.name}")
+        st.info(f"**File:** {uploaded_file.name}")
     with col2:
-        st.info(f"📊 **Size:** {uploaded_file.size / 1024:.1f} KB")
+        st.info(f"**Size:** {uploaded_file.size / 1024:.1f} KB")
     with col3:
-        st.info(f"⏰ **Time:** {datetime.now().strftime('%H:%M:%S')}")
-    with col4:
-        st.info(f"🔍 **Status:** Ready")
+        st.info("**Status:** Ready")
     
     # Analyze button
-    if st.button("🔍 Analyze NDA Document", type="primary", use_container_width=True):
-        with st.spinner("⏳ Analyzing document... Please wait..."):
+    if st.button("Analyze NDA Document", type="primary", use_container_width=True):
+        with st.spinner("Analyzing document... Please wait..."):
             start_time = time.time()
             try:
                 # Upload to API
-                files = {"file": (uploaded_file.name, uploaded_file.getbuffer(), "application/pdf")}
+                files = {"file": (uploaded_file.name, uploaded_file.getbuffer(), uploaded_file.type or "application/octet-stream")}
                 response = requests.post(f"{api_url}/upload", files=files, timeout=300)
                 elapsed_time = time.time() - start_time
                 
@@ -146,35 +143,38 @@ if uploaded_file is not None:
                     result = response.json()
                     
                     # Success message
-                    st.success(f"✅ Analysis complete in {elapsed_time:.2f}s")
+                    st.success(f"Analysis complete in {elapsed_time:.2f}s")
                     
                     # Overall Risk Summary
                     st.divider()
-                    st.subheader("📊 Executive Summary")
+                    st.subheader("Executive Summary")
                     
-                    col1, col2, col3 = st.columns(3)
+                    col1, col2, col3, col4 = st.columns(4)
                     
                     with col1:
                         risk_level = result["overall_risk"]
                         if risk_level == "High":
-                            st.error(f"🔴 **Overall Risk: HIGH**")
+                            st.error("Overall Risk: HIGH")
                         elif risk_level == "Medium":
-                            st.warning(f"🟡 **Overall Risk: MEDIUM**")
+                            st.warning("Overall Risk: MEDIUM")
                         else:
-                            st.success(f"🟢 **Overall Risk: LOW**")
+                            st.success("Overall Risk: LOW")
                     
                     with col2:
-                        st.metric("⚠️ Risky Clauses Found", result["total_risky_clauses"])
+                        st.metric("Risky Clauses Found", result["total_risky_clauses"])
                     
                     with col3:
                         avg_score = sum([a.get("risk_score", 0) for a in result["analysis"]]) / len(result["analysis"]) if result["analysis"] else 0
-                        st.metric("📈 Avg. Risk Score", f"{avg_score:.0f}/100")
+                        st.metric("Average Risk Score", f"{avg_score:.0f}/100")
+                    
+                    with col4:
+                        st.metric("Processing Time", f"{elapsed_time:.2f}s")
                     
                     st.divider()
                     
                     # Detailed Analysis
                     if result["analysis"]:
-                        st.subheader("🔍 Detailed Clause Analysis")
+                        st.subheader("Detailed Clause Analysis")
                         st.markdown(f"**{len(result['analysis'])} Clause(s) Requiring Review:**")
                         
                         for idx, clause_analysis in enumerate(result["analysis"], 1):
@@ -185,17 +185,17 @@ if uploaded_file is not None:
                             
                             # Risk color coding
                             if clause_analysis["risk"] == "high":
-                                emoji = "🔴"
+                                emoji = "High"
                                 risk_color = "high"
                             elif clause_analysis["risk"] == "medium":
-                                emoji = "🟡"
+                                emoji = "Medium"
                                 risk_color = "medium"
                             else:
-                                emoji = "🟢"
+                                emoji = "Low"
                                 risk_color = "low"
                             
                             # Create expander for each clause
-                            with st.expander(f"{emoji} Clause {idx} — {risk_level} Risk | {category}", expanded=False):
+                            with st.expander(f"{emoji} | Clause {idx} | {risk_level} Risk | {category}", expanded=False):
                                 
                                 # Top section with metrics
                                 col1, col2, col3 = st.columns([1, 1, 1])
@@ -240,16 +240,16 @@ if uploaded_file is not None:
                                 
                                 # Matched Rules
                                 if clause_analysis.get("matched_rules"):
-                                    st.markdown("### ✅ Matched Validation Rules")
+                                    st.markdown("### Matched Validation Rules")
                                     for rule in clause_analysis["matched_rules"]:
-                                        st.success(f"• **{rule}**")
+                                        st.success(rule)
                                 
                                 # AI Explanation
-                                st.markdown("### 🤖 AI Analysis")
+                                st.markdown("### AI Analysis")
                                 st.info(f"**Explanation:** {clause_analysis['reason']}")
                                 
                                 # Clause Text
-                                st.markdown("### 📄 Clause Text")
+                                st.markdown("### Clause Text")
                                 clause_preview = clause_analysis["clause"][:2000] + ("..." if len(clause_analysis["clause"]) > 2000 else "")
                                 clause_html = f"""
                                 <div style="background-color:#0f1720;padding:16px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);">
@@ -260,7 +260,7 @@ if uploaded_file is not None:
                                 
                                 # Mitigation Recommendations (clear and actionable)
                                 if clause_analysis.get("recommendations"):
-                                    st.markdown("### 💡 Mitigation Recommendations")
+                                    st.markdown("### Mitigation Recommendations")
                                     for i, rec in enumerate(clause_analysis["recommendations"], 1):
                                         rec_html = f"""
                                         <div style=\"background:#07202c;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);margin-bottom:8px;\">
@@ -275,12 +275,12 @@ if uploaded_file is not None:
                                     pct = int(risk_score)
                                 except Exception:
                                     pct = 0
-                                st.markdown("### 📈 Risk Meter")
+                                st.markdown("### Risk Meter")
                                 st.progress(min(max(pct / 100.0, 0.0), 1.0))
                     
                     else:
                         st.success("""
-                        ✅ **No Risky Clauses Detected**
+                        **No Risky Clauses Detected**
                         
                         This NDA appears to contain standard, balanced terms that are within acceptable risk parameters.
                         All analyzed clauses meet professional standards.
@@ -288,20 +288,20 @@ if uploaded_file is not None:
                 
                 elif response.status_code == 400:
                     error_msg = response.json().get("detail", "Invalid request")
-                    st.error(f"❌ **Request Error:** {error_msg}")
-                    st.info("Please verify your PDF file and try again.")
+                    st.error(f"Request Error: {error_msg}")
+                    st.info("Please verify the document is a supported PDF, DOCX, or text file and try again.")
                 
                 else:
-                    st.error(f"❌ **Server Error:** {response.status_code}")
+                    st.error(f"Server Error: {response.status_code}")
                     error_detail = response.json().get("detail", "Unknown error")
                     st.error(error_detail)
                     
             except requests.exceptions.Timeout:
-                st.error("❌ **Timeout Error:** Analysis took too long. Try a smaller document.")
+                st.error("Timeout Error: Analysis took too long. Try a smaller document.")
             
             except requests.exceptions.ConnectionError:
-                st.error(f"❌ **Connection Error:** Cannot reach API at {api_url}")
-                with st.expander("🔧 Troubleshooting"):
+                st.error(f"Connection Error: Cannot reach API at {api_url}")
+                with st.expander("Troubleshooting"):
                     st.markdown(f"""
                     1. Verify API is running:
                     ```bash
@@ -322,8 +322,9 @@ if uploaded_file is not None:
                     """)
             
             except Exception as e:
-                st.error(f"❌ **Error:** {str(e)}")
+                st.error(f"Error: {str(e)}")
                 st.info("Check logs for more details or try again.")
 
 st.divider()
+
 

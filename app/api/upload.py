@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 
-from app.services.parser import parse_document
+from app.services.parser import is_supported_document, parse_document
 from app.services.clause_splitter import split_clauses
 from app.services.llm_engine import analyze_clause
 from app.services.rule_engine import validate_clause, RULES
@@ -14,33 +14,35 @@ logger = get_logger(__name__)
 
 @router.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
-    """Upload and analyze an NDA PDF document"""
+    """Upload and analyze an NDA document in PDF, text, or DOCX form."""
     logger.info(f"Received upload request for file: {file.filename}")
     
     try:
-        # Validate file type
-        if file.content_type not in ["application/pdf", "application/x-pdf"]:
-            logger.warning(f"Invalid file type: {file.content_type}")
-            raise HTTPException(status_code=400, detail="Only PDF files are accepted")
-        
-        # Read and parse document
+        # Read before validating: browsers may send application/octet-stream.
         content = await file.read()
         if not content:
             logger.warning("Empty file uploaded")
             raise HTTPException(status_code=400, detail="Empty file uploaded")
         
         logger.info(f"File size: {len(content)} bytes")
+
+        if not is_supported_document(content, file.filename, file.content_type):
+            logger.warning(f"Unsupported file type: {file.content_type}, {file.filename}")
+            raise HTTPException(
+                status_code=400,
+                detail="Supported formats: PDF, DOCX, TXT, MD, and CSV",
+            )
         
         try:
-            text = parse_document(content)
+            text = parse_document(content, file.filename, file.content_type)
             logger.info(f"Document parsed successfully, extracted {len(text)} characters")
         except Exception as e:
-            logger.error(f"PDF parsing failed: {str(e)}")
-            raise HTTPException(status_code=400, detail=f"Failed to parse PDF: {str(e)}")
+            logger.error(f"Document parsing failed: {str(e)}")
+            raise HTTPException(status_code=400, detail=f"Failed to extract document text: {str(e)}")
         
         if not text or len(text.strip()) == 0:
-            logger.warning("PDF contains no extractable text")
-            raise HTTPException(status_code=400, detail="PDF contains no extractable text")
+            logger.warning("Document contains no extractable text")
+            raise HTTPException(status_code=400, detail="Document contains no extractable text")
         
         # Split clauses
         try:
@@ -58,38 +60,24 @@ async def upload_file(file: UploadFile = File(...)):
         for idx, clause in enumerate(clauses, 1):
             try:
                 logger.debug(f"Analyzing clause {idx}/{len(clauses)}")
-                analysis = analyze_clause(clause)
-                risk = analysis.get("risk", "no-risk")
-                reason = analysis.get("reason", "")
-
-                # Always check rule validation (don't skip for "no-risk" clauses)
+                # Check deterministic rules before calling the LLM. This makes explicit
+                # risks reliable even when the lightweight local model misses them or
+                # returns malformed JSON, and avoids an unnecessary LLM call.
                 matched_rules = validate_clause(clause)
-                
-                # If rules matched, upgrade risk level based on rule severity
                 if matched_rules:
-                    if risk == "no-risk":
-                        # Check the severity of matched rules by looking up their names in RULES
-                        rule_severities = []
-                        for rule_id, rule_config in RULES.items():
-                            if rule_config["name"] in matched_rules:
-                                rule_severities.append(rule_config.get("severity", "medium"))
-                        
-                        if "high" in rule_severities:
-                            risk = "high"
-                            reason = f"Pattern matched: {', '.join(matched_rules)}"
-                        else:
-                            risk = "medium"
-                            reason = f"Pattern matched: {', '.join(matched_rules)}"
-                        logger.info(f"Clause {idx}: LLM missed risk, but rules detected: {matched_rules}")
-                    else:
-                        # If LLM detected risk, confirm it matches rules
-                        for rule_id, rule_config in RULES.items():
-                            if rule_config["name"] in matched_rules:
-                                rule_severity = rule_config.get("severity", "medium")
-                                # Upgrade to high if any matched rule is high
-                                if rule_severity == "high":
-                                    risk = "high"
-                                    break
+                    rule_severities = [
+                        rule_config.get("severity", "medium")
+                        for rule_config in RULES.values()
+                        if rule_config["name"] in matched_rules
+                    ]
+                    risk = "high" if "high" in rule_severities else "medium"
+                    reason = f"Pattern matched: {', '.join(matched_rules)}"
+                    analysis = {"risk": risk, "reason": reason}
+                    logger.info(f"Clause {idx}: rules detected {matched_rules}")
+                else:
+                    analysis = analyze_clause(clause)
+                    risk = analysis.get("risk", "no-risk")
+                    reason = analysis.get("reason", "")
                 
                 # Skip only if both LLM and rules found no risk
                 if risk == "no-risk" and not matched_rules:
