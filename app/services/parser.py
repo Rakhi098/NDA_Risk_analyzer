@@ -57,7 +57,7 @@ def _ocr_pdf_page(page, dpi):
     """Render a scanned PDF page and extract its text with local Tesseract OCR."""
     from PIL import Image
 
-    pixmap = page.get_pixmap(matrix=fitz.Matrix(dpi / 72, dpi / 72))
+    pixmap = page.get_pixmap(matrix=fitz.Matrix(dpi / 72, dpi / 72)) 
     with Image.open(io.BytesIO(pixmap.tobytes("png"))) as image:
         try:
             return _get_tesseract().image_to_string(
@@ -68,7 +68,8 @@ def _ocr_pdf_page(page, dpi):
 
 
 def _parse_pdf(content):
-    dpi = int(os.getenv("OCR_DPI", "200"))
+    ''' Extract text from a PDF document, using selectable text when available and local OCR for scanned pages.'''
+    dpi = int(os.getenv("OCR_DPI", "200")) # 200 is used as a default for better OCR accuracy on scanned documents 
     text_parts = []
     with fitz.open(stream=content, filetype="pdf") as document:
         logger.info("PDF document opened with %s pages", document.page_count)
@@ -86,6 +87,7 @@ def _parse_pdf(content):
 
 
 def _parse_text(content):
+    ''' Extract text from a plain-text document, trying multiple encodings if necessary.'''
     for encoding in ("utf-8-sig", "utf-16", "latin-1"):
         try:
             return content.decode(encoding).strip()
@@ -95,6 +97,7 @@ def _parse_text(content):
 
 
 def _parse_word(content):
+    ''' Extract text from a Word document, including paragraphs and table cells.'''
     try:
         from docx import Document
     except ImportError as error:

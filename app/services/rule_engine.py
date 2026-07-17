@@ -27,7 +27,13 @@ RULES = {
             "without limitation",
             "indefinite term"
         ],
-        "negative_patterns": ["for a period of", "for", "years", "months", "until"],  # If these follow, duration IS specified
+        "negative_patterns": [
+            "for a period of",
+            "for the term of",
+            "years",
+            "months",
+            "until"
+        ],  # If these follow, duration IS specified
         "name": "Missing Duration",
         "severity": "high"
     },
