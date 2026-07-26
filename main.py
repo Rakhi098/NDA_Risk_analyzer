@@ -1,7 +1,3 @@
-"""FastAPI application entrypoint.
-
-This file defines `app` so `uvicorn main:app` works from project root.
-"""
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware 
 from fastapi.responses import JSONResponse

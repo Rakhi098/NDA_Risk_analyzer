@@ -2,6 +2,7 @@
 
 import io
 import os
+import shutil
 from pathlib import Path
 
 import fitz
@@ -38,6 +39,35 @@ def is_supported_document(content, filename=None, content_type=None):
     return get_document_type(content, filename, content_type) is not None
 
 
+def _find_tesseract_command():
+    """Find Tesseract without requiring callers to add it to ``PATH``."""
+    configured_command = os.getenv("TESSERACT_CMD")
+    if configured_command:
+        if os.path.isfile(configured_command):
+            return configured_command
+        logger.warning("TESSERACT_CMD does not point to a file: %s", configured_command)
+
+    path_command = shutil.which("tesseract")
+    if path_command:
+        return path_command
+
+    # The Windows installer normally uses this location and does not always
+    # add it to PATH. Include the common per-user location as well.
+    candidate_paths = [
+        Path(os.getenv("ProgramFiles", "C:/Program Files")) / "Tesseract-OCR" / "tesseract.exe",
+        Path(os.getenv("ProgramFiles(x86)", "C:/Program Files (x86)")) / "Tesseract-OCR" / "tesseract.exe",
+    ]
+    local_app_data = os.getenv("LOCALAPPDATA")
+    if local_app_data:
+        candidate_paths.append(Path(local_app_data) / "Programs" / "Tesseract-OCR" / "tesseract.exe")
+
+    for candidate in candidate_paths:
+        if candidate.is_file():
+            logger.info("Found Tesseract OCR at %s", candidate)
+            return str(candidate)
+    return None
+
+
 def _get_tesseract():
     try:
         import pytesseract
@@ -47,9 +77,14 @@ def _get_tesseract():
             "then install the Tesseract OCR application."
         ) from error
 
-    tesseract_cmd = os.getenv("TESSERACT_CMD")
+    tesseract_cmd = _find_tesseract_command()
     if tesseract_cmd:
         pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
+    else:
+        raise RuntimeError(
+            "Tesseract OCR executable was not found. Install Tesseract or set "
+            "TESSERACT_CMD to its tesseract.exe path."
+        )
     return pytesseract
 
 

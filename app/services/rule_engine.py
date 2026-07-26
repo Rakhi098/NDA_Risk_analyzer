@@ -53,6 +53,7 @@ RULES = {
             "confidential information includes all",
             "all information is confidential",
             "any and all information",
+            "all information or material that has or could have commercial value",
             "broadly includes",
             "all technical and business information"
         ],
@@ -65,7 +66,8 @@ RULES = {
             "only the receiving party shall",
             "solely the receiving party",
             "only one party is obligated",
-            "one-way obligation"
+            "one-way obligation",
+            "sole and exclusive benefit of the disclosing party"
         ],
         "negative_patterns": [],
         "name": "Unilateral Obligations",

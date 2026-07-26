@@ -18,7 +18,6 @@ async def upload_file(file: UploadFile = File(...)):
     logger.info(f"Received upload request for file: {file.filename}")
     
     try:
-        # Read before validating: browsers may send application/octet-stream.
         content = await file.read()
         if not content:
             logger.warning("Empty file uploaded")

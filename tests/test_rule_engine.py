@@ -22,3 +22,18 @@ def test_missing_duration_is_detected_when_no_time_limit_is_explicit():
     )
 
     assert validate_clause(clause) == ["Missing Duration"]
+
+
+def test_rules_detect_broad_scope_and_one_sided_duties_in_scanned_nda_text():
+    """OCR text from a mutual NDA must not be reported as having no risks."""
+    broad_scope = (
+        '"Confidential Information" shall include all information or material that has '
+        "or could have commercial value or other utility in the business."
+    )
+    one_sided_duty = (
+        "Receiving Party shall hold and maintain the Confidential Information in strictest "
+        "confidence for the sole and exclusive benefit of the Disclosing Party."
+    )
+
+    assert validate_clause(broad_scope) == ["Broad Confidentiality Scope"]
+    assert validate_clause(one_sided_duty) == ["Unilateral Obligations"]
